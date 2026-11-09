@@ -9,6 +9,12 @@ mod common;
 const ZSTD_ZIP_FILE: &str = "tests/test_inputs/sample_data.zstd.zip";
 const DEFLATE_ZIP_FILE: &str = "tests/test_inputs/sample_data.deflate.zip";
 const STORE_ZIP_FILE: &str = "tests/test_inputs/sample_data.store.zip";
+// Written by Python's zipfile (ZIP_LZMA): LZMA SDK header, end-of-stream marker (general purpose bit 1).
+const LZMA_ZIP_FILE: &str = "tests/test_inputs/sample_data.lzma.zip";
+// As above, but written to a non-seekable sink so every entry has a data descriptor.
+const LZMA_DESCRIPTOR_ZIP_FILE: &str = "tests/test_inputs/sample_data.lzma.descriptor.zip";
+// LZMA entries without an end-of-stream marker (general purpose bit 1 clear), terminated by their known size.
+const LZMA_NO_EOS_ZIP_FILE: &str = "tests/test_inputs/sample_data.lzma.no_eos.zip";
 const UTF8_EXTRA_ZIP_FILE: &str = "tests/test_inputs/sample_data_utf8_extra.zip";
 
 #[cfg(feature = "zstd-read")]
@@ -85,4 +91,64 @@ async fn decompress_zip_with_utf8_extra() {
     assert_eq!(zip_entries[0].header_size(), 93);
     assert_eq!(zip_entries[0].filename().as_str().unwrap(), "\u{4E2D}\u{6587}.txt");
     assert_eq!(zip_entries[0].filename().alternative(), Some(b"\xD6\xD0\xCe\xC4.txt".as_ref()));
+}
+
+#[cfg(feature = "lzma-read")]
+#[tokio::test]
+async fn decompress_lzma_zip_seek() {
+    common::check_decompress_seek(LZMA_ZIP_FILE).await
+}
+
+#[cfg(feature = "lzma-read")]
+#[tokio::test]
+async fn decompress_lzma_zip_mem() {
+    let content = tokio::fs::read(LZMA_ZIP_FILE).await.unwrap();
+    common::check_decompress_mem(content).await
+}
+
+#[cfg(feature = "lzma-read")]
+#[cfg(feature = "tokio-fs")]
+#[tokio::test]
+async fn decompress_lzma_zip_fs() {
+    common::check_decompress_fs(LZMA_ZIP_FILE).await
+}
+
+#[cfg(feature = "lzma-read")]
+#[tokio::test]
+async fn decompress_lzma_zip_stream() {
+    let content = tokio::fs::read(LZMA_ZIP_FILE).await.unwrap();
+    common::check_decompress_stream(&content).await
+}
+
+#[cfg(feature = "lzma-read")]
+#[tokio::test]
+async fn decompress_lzma_descriptor_zip_seek() {
+    common::check_decompress_seek(LZMA_DESCRIPTOR_ZIP_FILE).await
+}
+
+#[cfg(feature = "lzma-read")]
+#[tokio::test]
+async fn decompress_lzma_descriptor_zip_stream() {
+    let content = tokio::fs::read(LZMA_DESCRIPTOR_ZIP_FILE).await.unwrap();
+    common::check_decompress_stream(&content).await
+}
+
+#[cfg(feature = "lzma-read")]
+#[tokio::test]
+async fn decompress_lzma_no_eos_zip_seek() {
+    common::check_decompress_seek(LZMA_NO_EOS_ZIP_FILE).await
+}
+
+#[cfg(feature = "lzma-read")]
+#[tokio::test]
+async fn decompress_lzma_no_eos_zip_mem() {
+    let content = tokio::fs::read(LZMA_NO_EOS_ZIP_FILE).await.unwrap();
+    common::check_decompress_mem(content).await
+}
+
+#[cfg(feature = "lzma-read")]
+#[tokio::test]
+async fn decompress_lzma_no_eos_zip_stream() {
+    let content = tokio::fs::read(LZMA_NO_EOS_ZIP_FILE).await.unwrap();
+    common::check_decompress_stream(&content).await
 }

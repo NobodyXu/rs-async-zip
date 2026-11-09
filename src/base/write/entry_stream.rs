@@ -152,6 +152,7 @@ impl<'b, W: AsyncWrite + Unpin> EntryStreamWriter<'b, W> {
             flags: GeneralPurposeFlag {
                 data_descriptor: true,
                 encrypted: false,
+                compression_option_1: entry.compression().sets_compression_option_1(),
                 strong_encryption: false,
                 compressed_patched: false,
                 filename_unicode: utf8_without_alternative,

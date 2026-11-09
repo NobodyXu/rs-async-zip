@@ -19,6 +19,9 @@ pub struct LocalFileHeader {
 #[derive(Copy, Clone)]
 pub struct GeneralPurposeFlag {
     pub encrypted: bool,
+    /// Bit 1, whose meaning depends on the compression method. For LZMA, it's set when the compressed data is
+    /// terminated by an end-of-stream marker.
+    pub compression_option_1: bool,
     pub strong_encryption: bool,
     pub compressed_patched: bool,
     pub data_descriptor: bool,

@@ -94,7 +94,7 @@ where
 
         ZipEntryReader::new_with_borrow(
             &mut self.reader,
-            stored_entry.entry.compression(),
+            stored_entry.entry.decode_info(true),
             stored_entry.entry.compressed_size(),
         )
     }
@@ -107,7 +107,7 @@ where
 
         let reader = ZipEntryReader::new_with_borrow(
             &mut self.reader,
-            stored_entry.entry.compression(),
+            stored_entry.entry.decode_info(true),
             stored_entry.entry.compressed_size(),
         )?;
 
@@ -126,7 +126,7 @@ where
 
         ZipEntryReader::new_with_owned(
             self.reader,
-            stored_entry.entry.compression(),
+            stored_entry.entry.decode_info(true),
             stored_entry.entry.compressed_size(),
         )
     }

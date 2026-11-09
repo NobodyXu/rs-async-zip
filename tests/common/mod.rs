@@ -96,3 +96,26 @@ pub async fn check_decompress_mem(zip_data: Vec<u8>) {
         assert_eq!(output, expected, "for {fname}, expect zip data to match file data");
     }
 }
+
+pub async fn check_decompress_stream(zip_data: &[u8]) {
+    use futures_lite::io::AsyncReadExt;
+
+    let mut zip = async_zip::base::read::stream::ZipFileReader::new(zip_data);
+    let mut count = 0;
+    while let Some(mut reader) = zip.next_with_entry().await.unwrap() {
+        let fname = reader.reader().entry().filename().as_str().unwrap().to_owned();
+        let mut output = Vec::new();
+        reader.reader_mut().read_to_end(&mut output).await.unwrap();
+        let crc = reader.reader_mut().compute_hash();
+        let (descriptor, next) = reader.done().await.unwrap();
+        if let Some(descriptor) = descriptor {
+            assert_eq!(descriptor.crc, crc, "for {fname}, expect data descriptor CRC to match");
+            assert_eq!(descriptor.uncompressed_size, output.len() as u64);
+        }
+        let expected = tokio::fs::read(format!("{FOLDER_PREFIX}/{fname}")).await.unwrap();
+        assert_eq!(output, expected, "for {fname}, expect zip data to match file data");
+        zip = next;
+        count += 1;
+    }
+    assert_eq!(count, FILE_LIST.len());
+}

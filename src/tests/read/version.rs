@@ -11,6 +11,7 @@ fn deflate64_zip(local_version: u16, central_version: u16) -> Vec<u8> {
     let filename = b"a";
     let flags = GeneralPurposeFlag {
         encrypted: false,
+        compression_option_1: false,
         strong_encryption: false,
         compressed_patched: false,
         data_descriptor: false,

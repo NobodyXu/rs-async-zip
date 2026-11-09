@@ -1,6 +1,8 @@
 // Copyright (c) 2021 Harry [Majored] [hello@majored.pw]
 // MIT License (https://github.com/Majored/rs-async-zip/blob/main/LICENSE)
 
+#[cfg(feature = "lzma-write")]
+use crate::base::write::io::lzma::ZipLzmaWriter;
 use crate::base::write::io::offset::AsyncOffsetWriter;
 use crate::spec::compression::WriteCompression;
 
@@ -25,7 +27,7 @@ pub enum CompressedAsyncWriter<'b, W: AsyncWrite + Unpin> {
     #[cfg(feature = "bzip2-write")]
     Bz(write::BzEncoder<ShutdownIgnoredWriter<&'b mut AsyncOffsetWriter<W>>>),
     #[cfg(feature = "lzma-write")]
-    Lzma(write::LzmaEncoder<ShutdownIgnoredWriter<&'b mut AsyncOffsetWriter<W>>>),
+    Lzma(write::LzmaEncoder<ZipLzmaWriter<ShutdownIgnoredWriter<&'b mut AsyncOffsetWriter<W>>>>),
     #[cfg(feature = "zstd-write")]
     Zstd(write::ZstdEncoder<ShutdownIgnoredWriter<&'b mut AsyncOffsetWriter<W>>>),
     #[cfg(feature = "xz-write")]
@@ -44,7 +46,7 @@ impl<'b, W: AsyncWrite + Unpin> CompressedAsyncWriter<'b, W> {
             WriteCompression::Bz => CompressedAsyncWriter::Bz(write::BzEncoder::new(ShutdownIgnoredWriter(writer))),
             #[cfg(feature = "lzma-write")]
             WriteCompression::Lzma => {
-                CompressedAsyncWriter::Lzma(write::LzmaEncoder::new(ShutdownIgnoredWriter(writer)))
+                CompressedAsyncWriter::Lzma(write::LzmaEncoder::new(ZipLzmaWriter::new(ShutdownIgnoredWriter(writer))))
             }
             #[cfg(feature = "zstd-write")]
             WriteCompression::Zstd => {
@@ -63,7 +65,7 @@ impl<'b, W: AsyncWrite + Unpin> CompressedAsyncWriter<'b, W> {
             #[cfg(feature = "bzip2-write")]
             CompressedAsyncWriter::Bz(inner) => inner.into_inner().into_inner(),
             #[cfg(feature = "lzma-write")]
-            CompressedAsyncWriter::Lzma(inner) => inner.into_inner().into_inner(),
+            CompressedAsyncWriter::Lzma(inner) => inner.into_inner().into_inner().into_inner(),
             #[cfg(feature = "zstd-write")]
             CompressedAsyncWriter::Zstd(inner) => inner.into_inner().into_inner(),
             #[cfg(feature = "xz-write")]

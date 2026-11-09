@@ -31,6 +31,19 @@ pub enum Compression {
     Xz,
 }
 
+impl Compression {
+    /// Whether entries this crate writes with this method set general purpose bit 1.
+    ///
+    /// For LZMA the bit announces an end-of-stream marker, which the encoder always writes.
+    pub(crate) fn sets_compression_option_1(self) -> bool {
+        #[cfg(feature = "lzma-write")]
+        if self == Compression::Lzma {
+            return true;
+        }
+        false
+    }
+}
+
 /// A compression method enabled for writing.
 #[derive(Debug, Clone, Copy)]
 pub(crate) enum WriteCompression {

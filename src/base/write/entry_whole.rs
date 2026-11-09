@@ -3,6 +3,8 @@
 
 use crate::base::write::get_or_put_info_zip_unicode_comment_extra_field_mut;
 use crate::base::write::get_or_put_info_zip_unicode_path_extra_field_mut;
+#[cfg(feature = "lzma-write")]
+use crate::base::write::io::lzma::ZipLzmaWriter;
 use crate::base::write::{CentralDirectoryEntry, ZipFileWriter};
 use crate::entry::ZipEntry;
 use crate::error::{Result, Zip64ErrorCase, ZipError};
@@ -172,6 +174,7 @@ impl<'b, 'c, W: AsyncWrite + Unpin> EntryWholeWriter<'b, 'c, W> {
             flags: GeneralPurposeFlag {
                 data_descriptor: false,
                 encrypted: false,
+                compression_option_1: self.entry.compression().sets_compression_option_1(),
                 strong_encryption: false,
                 compressed_patched: false,
                 filename_unicode: utf8_without_alternative,
@@ -246,10 +249,10 @@ async fn compress(compression: WriteCompression, data: &[u8], level: async_compr
         }
         #[cfg(feature = "lzma-write")]
         WriteCompression::Lzma => {
-            let mut writer = write::LzmaEncoder::with_quality(Cursor::new(Vec::new()), level);
+            let mut writer = write::LzmaEncoder::with_quality(ZipLzmaWriter::new(Cursor::new(Vec::new())), level);
             writer.write_all(data).await.unwrap();
             writer.close().await.unwrap();
-            writer.into_inner().into_inner()
+            writer.into_inner().into_inner().into_inner()
         }
         #[cfg(feature = "xz-write")]
         WriteCompression::Xz => {

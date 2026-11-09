@@ -7,6 +7,8 @@ pub(crate) mod consts;
 pub(crate) mod data_descriptor;
 pub(crate) mod extra_field;
 pub(crate) mod header;
+#[cfg(any(feature = "lzma-read", feature = "lzma-write"))]
+pub(crate) mod lzma;
 pub(crate) mod parse;
 pub(crate) mod version;
 
