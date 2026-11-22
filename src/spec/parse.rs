@@ -37,6 +37,10 @@ impl GeneralPurposeFlag {
             false => 0x0,
             true => 0b1,
         };
+        let compression_option_1: u16 = match self.compression_option_1 {
+            false => 0x0,
+            true => 0x2,
+        };
         let strong_encryption: u16 = match self.strong_encryption {
             false => 0x0,
             true => 0x40,
@@ -54,7 +58,8 @@ impl GeneralPurposeFlag {
             true => 0x800,
         };
 
-        (encrypted | strong_encryption | compressed_patched | data_descriptor | filename_unicode).to_le_bytes()
+        (encrypted | compression_option_1 | strong_encryption | compressed_patched | data_descriptor | filename_unicode)
+            .to_le_bytes()
     }
 }
 
@@ -135,12 +140,20 @@ impl From<[u8; 26]> for LocalFileHeader {
 impl From<u16> for GeneralPurposeFlag {
     fn from(value: u16) -> GeneralPurposeFlag {
         let encrypted = !matches!(value & 0x1, 0);
+        let compression_option_1 = !matches!(value & 0x2, 0);
         let strong_encryption = !matches!(value & 0x40, 0);
         let compressed_patched = !matches!(value & 0x20, 0);
         let data_descriptor = !matches!((value & 0x8) >> 3, 0);
         let filename_unicode = !matches!((value & 0x800) >> 11, 0);
 
-        GeneralPurposeFlag { encrypted, strong_encryption, compressed_patched, data_descriptor, filename_unicode }
+        GeneralPurposeFlag {
+            encrypted,
+            compression_option_1,
+            strong_encryption,
+            compressed_patched,
+            data_descriptor,
+            filename_unicode,
+        }
     }
 }
 

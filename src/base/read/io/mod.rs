@@ -6,6 +6,8 @@ pub(crate) mod compressed;
 pub(crate) mod entry;
 pub(crate) mod hashed;
 pub(crate) mod locator;
+#[cfg(feature = "lzma-read")]
+pub(crate) mod lzma;
 pub(crate) mod owned;
 
 pub use combined_record::CombinedCentralDirectoryRecord;

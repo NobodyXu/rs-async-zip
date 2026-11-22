@@ -7,6 +7,7 @@ use std::ops::Deref;
 
 use futures_lite::io::{AsyncRead, AsyncReadExt, AsyncSeek, AsyncSeekExt, SeekFrom};
 
+use crate::base::read::io::compressed::DecodeInfo;
 use crate::base::read::{get_combined_sizes, get_zip64_extra_field};
 use crate::entry::builder::ZipEntryBuilder;
 use crate::error::{Result, ZipError};
@@ -46,6 +47,10 @@ pub struct ZipEntry {
     pub(crate) extra_fields: Vec<ExtraField>,
     pub(crate) comment: ZipString,
     pub(crate) data_descriptor: bool,
+    /// General purpose bit 1 as read from an archive. For LZMA, the data ends with an end-of-stream marker.
+    ///
+    /// Writers derive the bit from the compression method instead, see [`Compression::sets_compression_option_1`].
+    pub(crate) compression_option_1: bool,
     pub(crate) file_offset: u64,
 }
 
@@ -78,7 +83,19 @@ impl ZipEntry {
             extra_fields: Vec::new(),
             comment: String::new().into(),
             data_descriptor: false,
+            compression_option_1: false,
             file_offset: 0,
+        }
+    }
+
+    /// Returns what a decoder needs to know about this entry.
+    ///
+    /// `uncompressed_size_known` is false when the entry is read from a local file header with a data descriptor.
+    pub(crate) fn decode_info(&self, uncompressed_size_known: bool) -> DecodeInfo {
+        DecodeInfo {
+            compression: self.compression,
+            compression_option_1: self.compression_option_1,
+            uncompressed_size: uncompressed_size_known.then_some(self.uncompressed_size),
         }
     }
 

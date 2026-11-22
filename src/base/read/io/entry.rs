@@ -2,10 +2,13 @@
 // MIT License (https://github.com/Majored/rs-async-zip/blob/main/LICENSE)
 
 use crate::base::read::counting::Counting;
-use crate::base::read::io::{compressed::CompressedReader, hashed::HashedReader, owned::OwnedReader};
+use crate::base::read::io::{
+    compressed::{CompressedReader, DecodeInfo},
+    hashed::HashedReader,
+    owned::OwnedReader,
+};
 use crate::entry::ZipEntry;
 use crate::error::{Result, ZipError};
-use crate::spec::Compression;
 
 use std::pin::Pin;
 use std::task::{Context, Poll};
@@ -32,20 +35,16 @@ where
     R: AsyncBufRead + Unpin,
 {
     /// Constructs a new entry reader from its required parameters (incl. an owned R).
-    pub(crate) fn new_with_owned(reader: R, compression: Compression, size: u64) -> Result<Self> {
-        let reader = HashedReader::new(CompressedReader::new(
-            Counting::new(OwnedReader::Owned(reader).take(size)),
-            compression,
-        )?);
+    pub(crate) fn new_with_owned(reader: R, info: DecodeInfo, size: u64) -> Result<Self> {
+        let reader =
+            HashedReader::new(CompressedReader::new(Counting::new(OwnedReader::Owned(reader).take(size)), info)?);
         Ok(Self { reader, entry: WithoutEntry })
     }
 
     /// Constructs a new entry reader from its required parameters (incl. a mutable borrow of an R).
-    pub(crate) fn new_with_borrow(reader: &'a mut R, compression: Compression, size: u64) -> Result<Self> {
-        let reader = HashedReader::new(CompressedReader::new(
-            Counting::new(OwnedReader::Borrow(reader).take(size)),
-            compression,
-        )?);
+    pub(crate) fn new_with_borrow(reader: &'a mut R, info: DecodeInfo, size: u64) -> Result<Self> {
+        let reader =
+            HashedReader::new(CompressedReader::new(Counting::new(OwnedReader::Borrow(reader).take(size)), info)?);
         Ok(Self { reader, entry: WithoutEntry })
     }
 

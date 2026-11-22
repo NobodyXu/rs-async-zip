@@ -414,6 +414,7 @@ where
         extra_fields,
         comment,
         data_descriptor: header.flags.data_descriptor,
+        compression_option_1: header.flags.compression_option_1,
         file_offset,
     };
 
@@ -474,6 +475,7 @@ where
         extra_fields,
         comment: String::new().into(),
         data_descriptor: header.flags.data_descriptor,
+        compression_option_1: header.flags.compression_option_1,
         file_offset,
     };
 

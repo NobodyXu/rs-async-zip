@@ -160,6 +160,7 @@ impl<'b, W: AsyncWrite + AsyncSeek + Unpin> EntrySeekableWriter<'b, W> {
             flags: GeneralPurposeFlag {
                 data_descriptor: false,
                 encrypted: false,
+                compression_option_1: entry.compression().sets_compression_option_1(),
                 strong_encryption: false,
                 compressed_patched: false,
                 filename_unicode: utf8_without_alternative,
